@@ -1,0 +1,44 @@
+name: image
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+env:
+  LLAMA_CPP_COMMIT: cd959bae99ff4bed22bef2604f45241c09bbb8c8
+  IMAGE: ghcr.io/${{ github.repository_owner }}/llamacpp-vulkan
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch the Arch Linux ARM root filesystem
+        run: |
+          curl -fsSL -o ArchLinuxARM-aarch64-latest.tar.gz http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz
+          curl -fsSL -o rootfs.md5 http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz.md5
+          md5sum -c rootfs.md5
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Containerfile
+          platforms: linux/arm64
+          push: true
+          provenance: false
+          build-args: LLAMA_CPP_COMMIT=${{ env.LLAMA_CPP_COMMIT }}
+          tags: ${{ env.IMAGE }}:${{ env.LLAMA_CPP_COMMIT }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.licenses=MIT
+      - name: Smoke test and record the digest
+        run: |
+          docker run --rm "$IMAGE@${{ steps.push.outputs.digest }}" llama-server --version
+          echo "$IMAGE@${{ steps.push.outputs.digest }}" | tee -a "$GITHUB_STEP_SUMMARY"
