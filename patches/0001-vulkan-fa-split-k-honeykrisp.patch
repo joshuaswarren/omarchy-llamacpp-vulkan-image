@@ -1,0 +1,20 @@
+--- a/ggml/src/ggml-vulkan/ggml-vulkan.cpp	2026-11-09 22:16:34.985803116 -0600
++++ b/ggml/src/ggml-vulkan/ggml-vulkan.cpp	2026-11-09 22:16:58.000862301 -0600
+@@ -8233,10 +8233,15 @@
+     uint32_t split_k = 1;
+ 
+     // Intel Alchemist prefers more workgroups
+-    const uint32_t shader_core_count_multiplier = (ctx->device->vendor_id == VK_VENDOR_ID_INTEL && ctx->device->architecture != INTEL_XE2) ? 2 : 1;
++    bool honeykrisp = false;
++#if VK_HEADER_VERSION >= 287
++    honeykrisp = ctx->device->driver_id == vk::DriverId::eMesaHoneykrisp;
++#endif
++    // Apple GPU cores (Honeykrisp) also want about two workgroups per core, like Intel Alchemist.
++    const uint32_t shader_core_count_multiplier = ((ctx->device->vendor_id == VK_VENDOR_ID_INTEL && ctx->device->architecture != INTEL_XE2) || honeykrisp) ? 2 : 1;
+ 
+     // Use a placeholder core count if one isn't available. split_k is a big help for perf.
+-    const uint32_t shader_core_count = ctx->device->shader_core_count ? ctx->device->shader_core_count * shader_core_count_multiplier : 16;
++    const uint32_t shader_core_count = ctx->device->shader_core_count ? ctx->device->shader_core_count * shader_core_count_multiplier : (honeykrisp ? 64 : 16);
+ 
+     const uint32_t Br = fa_pipeline_state.Br;
+     const uint32_t Bc = fa_pipeline_state.Bc;

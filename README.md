@@ -7,7 +7,7 @@ A GitHub workflow builds it on an arm64 runner. It publishes it to `ghcr.io/josh
 
 ## What is inside
 
-- A static `llama-server` and `llama-bench` with the Vulkan backend. They build from the llama.cpp commit in the workflow.
+- A static `llama-server` and `llama-bench` with the Vulkan backend. They build from the llama.cpp commit in the workflow, plus the patches in `patches/`. One patch lets the Vulkan flash-attention path split the key loop across workgroups on the Honeykrisp driver, which does not report a core count.
 - The Vulkan loader and the Arch Linux ARM `vulkan-asahi` driver. That is the driver build Omarchy ships on Apple Silicon.
 - Nothing else. No compiler, no package database.
 

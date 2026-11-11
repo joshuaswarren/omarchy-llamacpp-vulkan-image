@@ -34,7 +34,7 @@ jobs:
           push: true
           provenance: false
           build-args: LLAMA_CPP_COMMIT=${{ env.LLAMA_CPP_COMMIT }}
-          tags: ${{ env.IMAGE }}:${{ env.LLAMA_CPP_COMMIT }}
+          tags: ${{ env.IMAGE }}:${{ env.LLAMA_CPP_COMMIT }}-splitk
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.licenses=MIT

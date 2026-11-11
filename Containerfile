@@ -9,9 +9,11 @@ RUN sed -i 's/^CheckSpace/#CheckSpace/; s/^\[options\]/[options]\nDisableSandbox
 
 FROM alarm AS build
 ARG LLAMA_CPP_COMMIT
+COPY patches /patches
 RUN pacman -Syu --noconfirm --needed base-devel cmake git vulkan-headers vulkan-icd-loader shaderc spirv-headers \
  && mkdir /src && cd /src && git init -q && git remote add origin https://github.com/ggml-org/llama.cpp \
  && git fetch -q --depth 1 origin "$LLAMA_CPP_COMMIT" && git checkout -q FETCH_HEAD \
+ && git apply /patches/*.patch \
  && cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DGGML_VULKAN=ON -DGGML_NATIVE=OFF \
       -DGGML_CPU_ARM_ARCH=armv8.4-a+dotprod -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF \
  && cmake --build build --target llama-server llama-bench -j "$(nproc)"
