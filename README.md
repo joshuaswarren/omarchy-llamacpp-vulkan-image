@@ -21,6 +21,17 @@ podman run --rm --device /dev/dri/renderD128 --group-add keep-groups -p 127.0.0.
   llama-server --host 0.0.0.0 --port 8080 -m /models/model.gguf -ngl 999
 ```
 
+## Build locally
+
+The Containerfile needs the Arch Linux ARM root filesystem tarball in the build context. Fetch it, then build for arm64:
+
+```sh
+curl -fsSLO http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz
+podman build --arch arm64 -f Containerfile \
+  --build-arg LLAMA_CPP_COMMIT=cd959bae99ff4bed22bef2604f45241c09bbb8c8 \
+  -t llamacpp-vulkan .
+```
+
 ## Update
 
 Change `LLAMA_CPP_COMMIT` in `.github/workflows/image.yml` and push to `main`. The run prints the new digest.
